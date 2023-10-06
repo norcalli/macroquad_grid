@@ -308,7 +308,6 @@ impl Grid {
 
         // draw background rect
         draw_rectangle(cell_rect.x, cell_rect.y, cell_rect.w, cell_rect.h, bg_color);
-
         // draw the text if this cell has any
         let text = &cell.text;
         if !text.is_empty() {
@@ -320,7 +319,8 @@ impl Grid {
             let mut text = text.as_str();
             loop {
                 // Check if it fits. If it doesn't then retry using whichever strategy we have.
-                let text_dim = macroquad::text::measure_text(text, None, text_height as u16, 1.0); // 1.0 is default
+                let mut text_dim =
+                    macroquad::text::measure_text(text, None, text_height as u16, 1.0); // 1.0 is default
                 if self.auto_resize_text && text_dim.width > cell_rect.w {
                     text_height *= cell_rect.w / text_dim.width;
                     text_height = text_height.floor();
@@ -330,6 +330,14 @@ impl Grid {
                     continue;
                 }
 
+                let fix_to_bitmap_size = false;
+                if fix_to_bitmap_size {
+                    text_height = (text_height / 16.0).floor().max(1.0) * 16.0;
+                    // 1.0 is default
+                    text_dim = macroquad::text::measure_text(text, None, text_height as u16, 1.0);
+                    text = truncate_text_single_line(text, &cell_rect, &text_dim);
+                    text_dim = macroquad::text::measure_text(text, None, text_height as u16, 1.0);
+                };
                 let centered_x = (cell_rect.w - text_dim.width) / 2.0 + cell_rect.x;
                 let centered_y = y_pos - (cell_rect.h - text_dim.height) / 2.0;
 
